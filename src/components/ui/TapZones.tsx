@@ -1,3 +1,5 @@
+import type { SyntheticEvent } from 'react'
+
 interface TapZonesProps {
   onPrev: () => void
   onNext: () => void
@@ -5,34 +7,34 @@ interface TapZonesProps {
 }
 
 /**
- * iPhone Stories navigation:
- * tap left = back, tap right = forward.
- * Ignores controls marked with data-no-tap.
+ * Stories no iPhone: toque à esquerda volta, à direita avança.
+ * O próprio botão não pode se cancelar — antes o clique era ignorado
+ * porque o alvo era um <button>.
  */
 export function TapZones({ onPrev, onNext, enabled }: TapZonesProps) {
   if (!enabled) return null
 
-  const guard = (e: React.SyntheticEvent, fn: () => void) => {
-    const t = e.target
-    if (t instanceof Element && t.closest('[data-no-tap], button, a, input, textarea, [role="slider"]')) {
-      return
+  const go =
+    (fn: () => void) => (event: SyntheticEvent<HTMLButtonElement>) => {
+      event.stopPropagation()
+      fn()
     }
-    fn()
-  }
 
   return (
-    <div className="absolute inset-0 z-30 flex touch-manipulation">
+    <div className="fixed inset-0 z-[45] flex">
       <button
         type="button"
-        aria-label="Anterior"
-        className="h-full w-[28%] bg-transparent"
-        onClick={(e) => guard(e, onPrev)}
+        aria-label="Story anterior"
+        data-tap-zone="prev"
+        className="h-full w-[32%] touch-manipulation bg-transparent"
+        onClick={go(onPrev)}
       />
       <button
         type="button"
-        aria-label="Próximo"
-        className="h-full flex-1 bg-transparent"
-        onClick={(e) => guard(e, onNext)}
+        aria-label="Próximo story"
+        data-tap-zone="next"
+        className="h-full flex-1 touch-manipulation bg-transparent"
+        onClick={go(onNext)}
       />
     </div>
   )

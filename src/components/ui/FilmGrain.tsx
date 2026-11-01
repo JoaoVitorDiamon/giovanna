@@ -4,7 +4,7 @@ export function FilmGrain() {
       aria-hidden
       className="pointer-events-none fixed inset-0 z-[60] mix-blend-overlay opacity-[0.07]"
     >
-      <div className="grain h-full w-full animate-[grain-shift_8s_steps(10)_infinite]" />
+      <div className="grain pointer-events-none h-full w-full animate-[grain-shift_8s_steps(10)_infinite]" />
       <style>{`
         @keyframes grain-shift {
           0%, 100% { transform: translate(0, 0); }

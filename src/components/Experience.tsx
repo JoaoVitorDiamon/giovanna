@@ -86,15 +86,14 @@ export function Experience() {
   }, [narrative.currentId, narrative])
 
   useEffect(() => {
-    const isInteractive = (target: EventTarget | null) => {
+    const blockedControl = (target: EventTarget | null) => {
       if (!(target instanceof Element)) return false
-      return Boolean(
-        target.closest('button, a, input, textarea, [role="slider"], [data-no-tap]'),
-      )
+      if (target.closest('[data-tap-zone]')) return false
+      return Boolean(target.closest('button, a, input, textarea, [role="slider"], [data-no-tap]'))
     }
 
     const onStart = (e: TouchEvent) => {
-      if (isInteractive(e.target)) {
+      if (blockedControl(e.target)) {
         touchStart.current = null
         return
       }
@@ -111,16 +110,18 @@ export function Experience() {
       const dy = t.clientY - start.y
       touchStart.current = null
 
-      // Horizontal swipe feels natural on iPhone
-      if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) advance()
-        else goBack()
+      const tapZone = e.target instanceof Element ? e.target.closest('[data-tap-zone]') : null
+      const moved = Math.hypot(dx, dy)
+
+      // Toque parado no story: avança ou volta. O lock evita disparo duplo com o click.
+      if (tapZone && moved < 18) {
+        if (tapZone.getAttribute('data-tap-zone') === 'prev') goBack()
+        else advance()
         return
       }
 
-      // Soft vertical swipe also works
-      if (Math.abs(dy) > 70 && Math.abs(dy) > Math.abs(dx)) {
-        if (dy < 0) advance()
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) advance()
         else goBack()
       }
     }
@@ -158,9 +159,10 @@ export function Experience() {
             onStart={narrative.start}
             onRestart={narrative.restart}
           />
-          <TapZones enabled={showStoryUi} onPrev={goBack} onNext={advance} />
         </motion.div>
       </AnimatePresence>
+
+      <TapZones enabled={showStoryUi} onPrev={goBack} onNext={advance} />
 
       {showStoryUi && (
         <p className="pointer-events-none fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] left-0 right-0 z-40 text-center font-sans text-[9px] tracking-[0.28em] text-[#A6A29C]/70 uppercase">
